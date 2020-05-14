@@ -18,11 +18,6 @@ parameters:
   value: stage
   name: STAGE_PROJECT
   required: true
-- displayName: Deploy Eclipse Che
-  description: Deploy Eclipse Che in order to use as an online IDE for changing code in this demo
-  value: "false"
-  name: DEPLOY_CHE
-  required: true
 - displayName: Ephemeral
   description: Use no persistent storage for Gogs and Nexus
   value: "true"
@@ -286,7 +281,7 @@ objects:
             oc label dc jenkins app=jenkins --overwrite 
 
             # setup dev env
-            oc import-image wildfly --from=openshift/wildfly-120-centos7 --confirm -n ${DEV_PROJECT} 
+            oc import-image jboss-eap72 --from=image-registry.openshift-image-registry.svc:5000/openshift/jboss-eap72-openshift --confirm -n hsaid-test --insecure --confirm -n ${DEV_PROJECT} 
             
             if [ "${ENABLE_QUAY}" == "true" ] ; then
               # cicd
@@ -295,7 +290,7 @@ objects:
               
               # dev
               oc create secret docker-registry quay-cicd-secret --docker-server=quay.io --docker-username="${QUAY_USERNAME}" --docker-password="${QUAY_PASSWORD}" --docker-email=cicd@redhat.com -n ${DEV_PROJECT}
-              oc new-build --name=tasks --image-stream=wildfly:latest --binary=true --push-secret=quay-cicd-secret --to-docker --to='quay.io/${QUAY_USERNAME}/${QUAY_REPOSITORY}:latest' -n ${DEV_PROJECT}
+              oc new-build --name=tasks --image-stream=jboss-eap72:latest --binary=true --push-secret=quay-cicd-secret --to-docker --to='quay.io/${QUAY_USERNAME}/${QUAY_REPOSITORY}:latest' -n ${DEV_PROJECT}
               oc new-app --name=tasks --docker-image=quay.io/${QUAY_USERNAME}/${QUAY_REPOSITORY}:latest --allow-missing-images -n ${DEV_PROJECT}
               oc set triggers dc tasks --remove-all -n ${DEV_PROJECT}
               oc patch dc tasks -p '{"spec": {"template": {"spec": {"containers": [{"name": "tasks", "imagePullPolicy": "Always"}]}}}}' -n ${DEV_PROJECT}
@@ -311,7 +306,7 @@ objects:
               oc secrets link default quay-cicd-secret --for=pull -n ${STAGE_PROJECT}
             else
               # dev
-              oc new-build --name=tasks --image-stream=wildfly:latest --binary=true -n ${DEV_PROJECT}
+              oc new-build --name=tasks --image-stream=jboss-eap72:latest --binary=true -n ${DEV_PROJECT}
               oc new-app tasks:latest --allow-missing-images -n ${DEV_PROJECT}
               oc set triggers dc -l app=tasks --containers=tasks --from-image=tasks:latest --manual -n ${DEV_PROJECT}
               
@@ -339,7 +334,7 @@ objects:
             GOGS_HOSTNAME="gogs-$CICD_NAMESPACE.$HOSTNAME"
 
             if [ "${EPHEMERAL}" == "true" ] ; then
-              oc new-app -f https://raw.githubusercontent.com/OpenShiftDemos/gogs-openshift-docker/master/openshift/gogs-template.yaml \
+              oc new-app -f https://raw.githubusercontent.com/OpenShiftDemos/gogs-openshift-docker/master/openshift/gogs-template.yaml	 \
                   --param=GOGS_VERSION=0.11.34 \
                   --param=HOSTNAME=$GOGS_HOSTNAME \
                   --param=SKIP_TLS_VERIFY=true
@@ -351,34 +346,23 @@ objects:
             fi
             
             sleep 5
+           
+             # deploy sonarqube
 
             if [ "${EPHEMERAL}" == "true" ] ; then
-              oc new-app -f https://raw.githubusercontent.com/siamaksade/sonarqube/master/sonarqube-template.yml --param=SONARQUBE_MEMORY_LIMIT=2Gi
+              oc new-app -f https://raw.githubusercontent.com/siamaksade/sonarqube/master/sonarqube-template.yml --param=SONARQUBE_MEMORY_LIMIT=1Gi
             else
               oc new-app -f https://raw.githubusercontent.com/siamaksade/sonarqube/master/sonarqube-persistent-template.yml --param=SONARQUBE_MEMORY_LIMIT=2Gi
             fi
 
             oc set resources dc/sonardb --limits=cpu=200m,memory=512Mi --requests=cpu=50m,memory=128Mi
-            oc set resources dc/sonarqube --limits=cpu=1,memory=2Gi --requests=cpu=50m,memory=128Mi
+            oc set resources dc/sonarqube --limits=cpu=1,memory=1Gi --requests=cpu=50m,memory=128Mi
 
-            if [ "${DEPLOY_CHE}" == "true" ] ; then
-              oc process -f https://raw.githubusercontent.com/minishift/minishift/master/addons/che/templates/che-workspace-service-account.yaml \
-                  --param SERVICE_ACCOUNT_NAMESPACE=$CICD_NAMESPACE --param=SERVICE_ACCOUNT_NAME=che-workspace | oc create -f -
-
-              oc process -f https://raw.githubusercontent.com/minishift/minishift/master/addons/che/templates/che-server-template.yaml \
-                --param ROUTING_SUFFIX=$HOSTNAME \
-                --param CHE_MULTIUSER=false \
-                --param CHE_VERSION="6.19.0" \
-                --param CHE_INFRA_OPENSHIFT_PROJECT=$CICD_NAMESPACE \
-                --param CHE_INFRA_KUBERNETES_SERVICE__ACCOUNT__NAME=che-workspace | oc create -f -
-
-              oc set resources dc/che --limits=cpu=1,memory=2Gi --requests=cpu=200m,memory=512Mi
-            fi
-
+            # deploy nexus
             if [ "${EPHEMERAL}" == "true" ] ; then
-              oc new-app -f https://raw.githubusercontent.com/OpenShiftDemos/nexus/master/nexus3-template.yaml --param=NEXUS_VERSION=3.13.0 --param=MAX_MEMORY=2Gi
+              oc new-app -f https://raw.githubusercontent.com/OpenShiftDemos/nexus/master/nexus3-template.yaml --param=NEXUS_VERSION=3.13.0 --param=MAX_MEMORY=1Gi
             else
-              oc new-app -f https://raw.githubusercontent.com/OpenShiftDemos/nexus/master/nexus3-persistent-template.yaml --param=NEXUS_VERSION=3.13.0 --param=MAX_MEMORY=2Gi
+              oc new-app -f https://raw.githubusercontent.com/OpenShiftDemos/nexus/master/nexus3-persistent-template.yaml --param=NEXUS_VERSION=3.13.0 --param=MAX_MEMORY=1Gi
             fi
 
             oc set resources dc/nexus --requests=cpu=200m --limits=cpu=2
@@ -407,7 +391,7 @@ objects:
 
             cat <<EOF > /tmp/data.json
             {
-              "clone_addr": "https://github.com/OpenShiftDemos/openshift-tasks.git",
+              "clone_addr": "https://github.com/hsaid4327/openshift-tasks.git",
               "uid": 1,
               "repo_name": "openshift-tasks"
             }
