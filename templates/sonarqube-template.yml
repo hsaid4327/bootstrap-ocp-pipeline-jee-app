@@ -110,7 +110,7 @@ objects:
               memory: ${POSTGRES_CONTAINER_MEMORY_SIZE_LIMIT}
               cpu: ${POSTGRES_CONTAINER_CPU_LIMIT}
             requests:
-              memory: 512Mi
+              memory: 1Gi
           securityContext:
             capabilities: {}
             privileged: false
@@ -248,7 +248,7 @@ objects:
           resources:
             requests:
               cpu: 200m
-              memory: 512Mi
+              memory: 1Gi
             limits:
               cpu: ${SONARQUBE_CPU_LIMIT}
               memory: ${SONARQUBE_MEMORY_LIMIT}
@@ -352,15 +352,15 @@ parameters:
   - description: Postgres Container Memory size limit
     displayName: Postgres Container Memory size limit
     name: POSTGRES_CONTAINER_MEMORY_SIZE_LIMIT
-    value: 512Mi
-  - description: Postgres Container CPU limit
+    value: 1Gi
+  - description: Postgres Container CPU limiti
     displayName: Postgres Container CPU limit
     name: POSTGRES_CONTAINER_CPU_LIMIT
     value: "1"
   - name: SONARQUBE_MEMORY_LIMIT
     description: SonarQube memory
     displayName: SonarQube memory
-    value: 512Mi
+    value: 1Gi
   - name: SONARQUBE_CPU_LIMIT
     description: SonarQube Container CPU limit
     displayName: SonarQube Container CPU limit

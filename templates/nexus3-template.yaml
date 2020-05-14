@@ -85,7 +85,7 @@ objects:
             limits:
               memory: ${MAX_MEMORY}
             requests:
-              memory: 512Mi
+              memory: 1Gi
           terminationMessagePath: /dev/termination-log
           volumeMounts:
           - mountPath: /nexus-data
@@ -150,4 +150,4 @@ parameters:
   displayName: Max Memory
   name: MAX_MEMORY
   required: true
-  value: 512Mi
+  value: 2Gi

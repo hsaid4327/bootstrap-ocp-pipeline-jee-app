@@ -65,6 +65,7 @@ objects:
       app: cicd-pipeline
       name: cicd-pipeline
     name: tasks-pipeline
+    namespace: cicd
   spec:
     triggers:
       - type: GitHub
@@ -350,17 +351,17 @@ objects:
              # deploy sonarqube
 
             if [ "${EPHEMERAL}" == "true" ] ; then
-              oc new-app -f https://raw.githubusercontent.com/siamaksade/sonarqube/master/sonarqube-template.yml --param=SONARQUBE_MEMORY_LIMIT=1Gi
+              oc new-app -f https://raw.githubusercontent.com/hsaid4327/openshift-cd-demo/ocp-4.1/templates/sonarqube-template.yml --param=SONARQUBE_MEMORY_LIMIT=1Gi
             else
               oc new-app -f https://raw.githubusercontent.com/siamaksade/sonarqube/master/sonarqube-persistent-template.yml --param=SONARQUBE_MEMORY_LIMIT=2Gi
             fi
 
-            oc set resources dc/sonardb --limits=cpu=200m,memory=512Mi --requests=cpu=50m,memory=128Mi
+            oc set resources dc/sonardb --limits=cpu=200m,memory=1Gi --requests=cpu=50m,memory=128Mi
             oc set resources dc/sonarqube --limits=cpu=1,memory=1Gi --requests=cpu=50m,memory=128Mi
 
             # deploy nexus
             if [ "${EPHEMERAL}" == "true" ] ; then
-              oc new-app -f https://raw.githubusercontent.com/OpenShiftDemos/nexus/master/nexus3-template.yaml --param=NEXUS_VERSION=3.13.0 --param=MAX_MEMORY=1Gi
+              oc new-app -f https://raw.githubusercontent.com/hsaid4327/openshift-cd-demo/ocp-4.1/templates/nexus3-template.yaml --param=NEXUS_VERSION=3.13.0 --param=MAX_MEMORY=1Gi
             else
               oc new-app -f https://raw.githubusercontent.com/OpenShiftDemos/nexus/master/nexus3-persistent-template.yaml --param=NEXUS_VERSION=3.13.0 --param=MAX_MEMORY=1Gi
             fi
