@@ -87,7 +87,7 @@ objects:
         - name: ENABLE_QUAY
           value: ${ENABLE_QUAY}
         jenkinsfile: |-
-          def mvnCmd = "mvn -s configuration/cicd-settings-nexus3.xml"
+          def mvnCmd = "mvn"
 
           pipeline {
             agent {
@@ -114,11 +114,12 @@ objects:
               }
               stage('Build Image') {
                 steps {
-                  sh "cp target/openshift-tasks.war target/ROOT.war"
+                  sh "mkdir deployments"
+                  sh "cp target/openshift-tasks.war deployments/ROOT.war"
                   script {
                     openshift.withCluster() {
                       openshift.withProject(env.DEV_PROJECT) {
-                        openshift.selector("bc", "tasks").startBuild("--from-file=target/ROOT.war", "--wait=true")
+                        openshift.selector("bc", "tasks").startBuild("--from-dir=.", "--wait=true")
                       }
                     }
                   }
@@ -325,14 +326,6 @@ objects:
             oc rollout cancel dc/tasks -n ${DEV_PROJECT}
 
  
-            # deploy nexus
-            if [ "${EPHEMERAL}" == "true" ] ; then
-              oc new-app -f https://raw.githubusercontent.com/hsaid4327/openshift-cd-demo/ocp-4.1/templates/nexus3-template.yaml --param=NEXUS_VERSION=3.13.0 --param=MAX_MEMORY=1Gi
-            else
-              oc new-app -f https://raw.githubusercontent.com/OpenShiftDemos/nexus/master/nexus3-persistent-template.yaml --param=NEXUS_VERSION=3.13.0 --param=MAX_MEMORY=1Gi
-            fi
-
-            oc set resources dc/nexus --requests=cpu=200m --limits=cpu=2
 
  
           image: quay.io/openshift/origin-cli:v4.0
