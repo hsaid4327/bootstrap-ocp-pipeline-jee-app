@@ -277,7 +277,7 @@ objects:
             oc label dc jenkins app=jenkins --overwrite 
 
             # setup dev env
-            oc import-image jboss-eap72 --from=image-registry.openshift-image-registry.svc:5000/openshift/jboss-eap72-openshift --confirm -n hsaid-test --insecure --confirm -n ${DEV_PROJECT} 
+            oc import-image jboss-eap72 --from=image-registry.openshift-image-registry.svc:5000/openshift/jboss-eap72-openshift --confirm --insecure --confirm -n ${DEV_PROJECT} 
             
             if [ "${ENABLE_QUAY}" == "true" ] ; then
               # cicd
@@ -312,21 +312,18 @@ objects:
             fi
             
             # dev project
-            oc expose dc/tasks --port=8080 -n ${DEV_PROJECT}
+            
             oc expose svc/tasks -n ${DEV_PROJECT}
             oc set probe dc/tasks --readiness --get-url=http://:8080/ws/demo/healthcheck --initial-delay-seconds=30 --failure-threshold=10 --period-seconds=10 -n ${DEV_PROJECT}
             oc set probe dc/tasks --liveness  --get-url=http://:8080/ws/demo/healthcheck --initial-delay-seconds=180 --failure-threshold=10 --period-seconds=10 -n ${DEV_PROJECT}
             oc rollout cancel dc/tasks -n ${STAGE_PROJECT}
 
             # stage project
-            oc expose dc/tasks --port=8080 -n ${STAGE_PROJECT}
+            
             oc expose svc/tasks -n ${STAGE_PROJECT}
             oc set probe dc/tasks --readiness --get-url=http://:8080/ws/demo/healthcheck --initial-delay-seconds=30 --failure-threshold=10 --period-seconds=10 -n ${STAGE_PROJECT}
             oc set probe dc/tasks --liveness  --get-url=http://:8080/ws/demo/healthcheck --initial-delay-seconds=180 --failure-threshold=10 --period-seconds=10 -n ${STAGE_PROJECT}
             oc rollout cancel dc/tasks -n ${DEV_PROJECT}
-
- 
-
  
           image: quay.io/openshift/origin-cli:v4.0
           name: cicd-demo-installer-job
