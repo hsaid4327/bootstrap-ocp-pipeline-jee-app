@@ -14,7 +14,7 @@ echo "************************** going to sleep ********************************
 sleep 120
 echo "************************** wakingup from sleep ********************************"
 
-oc new-app -n cicd -f /home/student/openshift-cd-demo/cicd-template.yaml --param ENABLE_QUAY=true --param QUAY_USERNAME=hsaid4327 --param QUAY_PASSWORD=NabIla4327
+oc new-app -n cicd -f cicd-template.yaml --param ENABLE_QUAY=true --param QUAY_USERNAME=hsaid4327 --param QUAY_PASSWORD=NabIla4327
 
 
 
