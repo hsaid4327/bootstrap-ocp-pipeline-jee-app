@@ -10,7 +10,7 @@ oc policy add-role-to-group edit system:serviceaccounts:cicd -n stage
 
 oc new-app --template=jenkins-persistent
 
-echo "************************** going to sleep ********************************"
+  echo "************************** * going to sleep ********************************"
 sleep 120
 echo "************************** wakingup from sleep ********************************"
 

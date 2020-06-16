@@ -1,4 +1,4 @@
-*For other versions of OpenShift, follow the instructions in the corresponding branch e.g. ocp-4.1, ocp-3.11, , etc
+*For the other versions of OpenShift, follow the instructions in the corresponding branch e.g. ocp-4.1, ocp-3.11, , etc
 
 # CI/CD Demo - OpenShift Container Platform 4.1
 
